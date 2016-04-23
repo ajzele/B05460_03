@@ -26,7 +26,7 @@ class Ticket {
         $this->status = $status;
     }
 
-    public function validate() {
+    private function validate() {
         if (!empty($this->title)
             && !empty($this->status)
             && !empty($this->severity)
