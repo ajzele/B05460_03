@@ -57,7 +57,7 @@ class Ticket {
 
 // Client
 $conn = new PDO(
-    'mysql:host=localhost;dbname=typler;charset=utf8mb4',
+    'mysql:host=localhost;dbname=project;charset=utf8',
     'root', 'mysql'
 );
 
