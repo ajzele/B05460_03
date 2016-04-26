@@ -1,5 +1,9 @@
 <?php
 
+interface ExporterFactoryInterface {
+    public function buildForFormat($format);
+}
+
 interface ExporterInterface {
     public function export($data);
 }
@@ -16,30 +20,10 @@ class XmlExporter implements ExporterInterface {
     }
 }
 
-class YamlExporter implements ExporterInterface {
-    public function export($data) {
-        // Implementation...
-    }
-}
-
-class ExporterFactory {
-    public function buildForFormat($format) {
-        if ('csv' === $format) {
-            return new CsvExporter();
-        } elseif ('xml' === $format) {
-            return new XmlExporter();
-        } elseif ('yaml' === $format) {
-            return new YamlExporter();
-        }
-
-        throw new \Exception('Unknown export format!');
-    }
-}
-
 class GenericExporter {
     private $exporterFactory;
 
-    public function __construct(ExporterFactory $exporterFactory) {
+    public function __construct(ExporterFactoryInterface $exporterFactory) {
         $this->exporterFactory = $exporterFactory;
     }
 
@@ -48,3 +32,39 @@ class GenericExporter {
         return $exporter->export($data);
     }
 }
+
+class ExporterFactory implements ExporterFactoryInterface {
+    private $factories = array();
+
+    public function addExporterFactory($format, callable $factory) {
+        $this->factories[$format] = $factory;
+    }
+
+    public function buildForFormat($format) {
+        $factory = $this->factories[$format];
+        $exporter = $factory(); // the factory is a callable
+
+        return $exporter;
+    }
+}
+
+// Client
+$exporterFactory = new ExporterFactory();
+
+$exporterFactory->addExporterFactory(
+    'xml',
+    function () {
+        return new XmlExporter();
+    }
+);
+
+$exporterFactory->addExporterFactory(
+    'csv',
+    function () {
+        return new CsvExporter();
+    }
+);
+
+$data = array(/* ... some export data ... */);
+$genericExporter = new GenericExporter($exporterFactory);
+$csvEncodedData = $genericExporter->exportToFormat($data, 'csv');
